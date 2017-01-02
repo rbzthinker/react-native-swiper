@@ -481,9 +481,11 @@ export default class extends Component {
         : React.cloneElement(Dot, {key: i})
       )
     }
-
+    let verticalStyle = this.state.dir === 'y' && Platform.OS === 'android' ? {
+      transform: [{rotate: '-90deg'}]
+    } : {};
     return (
-      <View pointerEvents='none' style={[styles['pagination_' + this.state.dir], this.props.paginationStyle]}>
+      <View pointerEvents='none' style={[styles['pagination_' + this.state.dir], this.props.paginationStyle, verticalStyle]}>
         {dots}
       </View>
     )
@@ -559,12 +561,16 @@ export default class extends Component {
         </ScrollView>
        )
     }
+    let verticalStyle = this.state.dir === 'y' && Platform.OS === 'android' ? {
+      width: this.state.height,
+      height: this.state.width,
+    } : {};
     return (
       <ViewPagerAndroid ref='scrollView'
         {...this.props}
         initialPage={this.props.loop ? this.state.index + 1 : this.state.index}
         onPageSelected={this.onScrollEnd}
-        style={{flex: 1}}>
+        style={[{flex:1},verticalStyle]}>
         {pages}
       </ViewPagerAndroid>
     )
@@ -586,15 +592,16 @@ export default class extends Component {
     const loopVal = loop ? 1 : 0
 
     let pages = []
-
-    const pageStyle = [{width: state.width, height: state.height}, styles.slide]
+    let verticalStyle = this.state.dir === 'y' && Platform.OS === 'android' ? {
+      transform: [{rotate: '-90deg'}]
+    } : {};
+    const pageStyle = [{width: state.width, height: state.height}, styles.slide, verticalStyle]
     const pageStyleLoading = {
       width: this.state.width,
       height: this.state.height,
       justifyContent: 'center',
       alignItems: 'center'
     }
-
     // For make infinite at least total > 1
     if (total > 1) {
       // Re-design a loop model for avoid img flickering
@@ -623,19 +630,23 @@ export default class extends Component {
     } else {
       pages = <View style={pageStyle} key={0}>{children}</View>
     }
-
+    let containerVerticalStyle = this.state.dir === 'y' && Platform.OS === 'android' ? {
+        width: state.height,
+        height: state.width,
+        transform:[{ rotate: '90deg'}],
+    } : {};
     return (
-      <View style={[styles.container, {
-        width: state.width,
-        height: state.height
-      }]}>
-        {this.renderScrollView(pages)}
-        {props.showsPagination && (props.renderPagination
-          ? this.props.renderPagination(state.index, state.total, this)
-          : this.renderPagination())}
-        {this.renderTitle()}
-        {this.props.showsButtons && this.renderButtons()}
-      </View>
+        <View style={[styles.container, {
+          width: state.width,
+          height: state.height,
+        }, containerVerticalStyle]}>
+            {this.renderScrollView(pages)}
+            {props.showsPagination && (props.renderPagination
+              ? this.props.renderPagination(state.index, state.total, this)
+              : this.renderPagination())}
+            {this.renderTitle()}
+            {this.props.showsButtons && this.renderButtons()}
+        </View>
     )
   }
 }
