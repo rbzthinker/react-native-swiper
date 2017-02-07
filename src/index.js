@@ -167,6 +167,9 @@ export default class extends Component {
     const sizeChanged = (nextProps.width || width) !== this.state.width ||
                         (nextProps.height || height) !== this.state.height
     if (!nextProps.autoplay && this.autoplayTimer) clearTimeout(this.autoplayTimer)
+
+    if (nextProps.autoplay) this.autoplay(true);
+
     this.setState(this.initState(nextProps, sizeChanged))
   }
 
@@ -245,11 +248,11 @@ export default class extends Component {
   /**
    * Automatic rolling
    */
-  autoplay = () => {
-    if (!Array.isArray(this.props.children) ||
+  autoplay = (forceAutoPlay=false) => {
+    if (!forceAutoPlay && (!Array.isArray(this.props.children) ||
       !this.props.autoplay ||
       this.internals.isScrolling ||
-      this.state.autoplayEnd) return
+      this.state.autoplayEnd)) return
 
     this.autoplayTimer && clearTimeout(this.autoplayTimer)
     this.autoplayTimer = setTimeout(() => {
