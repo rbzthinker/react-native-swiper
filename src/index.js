@@ -147,7 +147,8 @@ export default class extends Component {
     autoplay: false,
     autoplayTimeout: 2.5,
     autoplayDirection: true,
-    index: 0
+    index: 0,
+    scrollEnabled: true
   }
 
   /**
@@ -164,8 +165,9 @@ export default class extends Component {
   loopJumpTimer = null
 
   componentWillReceiveProps (nextProps) {
+
     const sizeChanged = (nextProps.width || width) !== this.state.width ||
-                        (nextProps.height || height) !== this.state.height
+      (nextProps.height || height) !== this.state.height
     if (!nextProps.autoplay && this.autoplayTimer) clearTimeout(this.autoplayTimer)
 
     if (nextProps.autoplay) this.autoplay(true);
@@ -242,7 +244,7 @@ export default class extends Component {
     const i = this.state.index + (this.props.loop ? 1 : 0)
     const scrollView = this.refs.scrollView
     this.loopJumpTimer = setTimeout(() => scrollView.setPageWithoutAnimation &&
-      scrollView.setPageWithoutAnimation(i), 50)
+    scrollView.setPageWithoutAnimation(i), 50)
   }
 
   /**
@@ -425,14 +427,14 @@ export default class extends Component {
     let overrides = {}
 
     /*
-    const scrollResponders = [
-      'onMomentumScrollBegin',
-      'onTouchStartCapture',
-      'onTouchStart',
-      'onTouchEnd',
-      'onResponderRelease',
-    ]
-    */
+     const scrollResponders = [
+     'onMomentumScrollBegin',
+     'onTouchStartCapture',
+     'onTouchStart',
+     'onTouchEnd',
+     'onResponderRelease',
+     ]
+     */
 
     for (let prop in props) {
       // if(~scrollResponders.indexOf(prop)
@@ -454,30 +456,30 @@ export default class extends Component {
    * @return {object} react-dom
    */
   renderPagination = () => {
-     // By default, dots only show when `total` >= 2
+    // By default, dots only show when `total` >= 2
     if (this.state.total <= 1) return null
 
     let dots = []
     const ActiveDot = this.props.activeDot || <View style={[{
-      backgroundColor: this.props.activeDotColor || '#007aff',
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      marginLeft: 3,
-      marginRight: 3,
-      marginTop: 3,
-      marginBottom: 3
-    }, this.props.activeDotStyle]} />
+        backgroundColor: this.props.activeDotColor || '#007aff',
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginLeft: 3,
+        marginRight: 3,
+        marginTop: 3,
+        marginBottom: 3
+      }, this.props.activeDotStyle]} />
     const Dot = this.props.dot || <View style={[{
-      backgroundColor: this.props.dotColor || 'rgba(0,0,0,.2)',
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      marginLeft: 3,
-      marginRight: 3,
-      marginTop: 3,
-      marginBottom: 3
-    }, this.props.dotStyle ]} />
+        backgroundColor: this.props.dotColor || 'rgba(0,0,0,.2)',
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginLeft: 3,
+        marginRight: 3,
+        marginTop: 3,
+        marginBottom: 3
+      }, this.props.dotStyle ]} />
     for (let i = 0; i < this.state.total; i++) {
       dots.push(i === this.state.index
         ? React.cloneElement(ActiveDot, {key: i})
@@ -550,30 +552,37 @@ export default class extends Component {
   }
 
   renderScrollView = pages => {
+    //console.log("scrollEnabled:" + this.props.scrollEnabled);
     if (Platform.OS === 'ios') {
+
       return (
         <ScrollView ref='scrollView'
-          {...this.props}
-          {...this.scrollViewPropOverrides()}
-          contentContainerStyle={[styles.wrapper, this.props.style]}
-          contentOffset={this.state.offset}
-          onScrollBeginDrag={this.onScrollBegin}
-          onMomentumScrollEnd={this.onScrollEnd}
-          onScrollEndDrag={this.onScrollEndDrag}>
+                    {...this.props}
+                    {...this.scrollViewPropOverrides()}
+                    contentContainerStyle={[styles.wrapper, this.props.style]}
+                    contentOffset={this.state.offset}
+                    onScrollBeginDrag={this.onScrollBegin}
+                    onMomentumScrollEnd={this.onScrollEnd}
+                    onScrollEndDrag={this.onScrollEndDrag}
+                    scrollEnabled = {this.props.scrollEnabled}
+        >
           {pages}
         </ScrollView>
-       )
+      )
     }
     let verticalStyle = this.state.dir === 'y' && Platform.OS === 'android' ? {
       width: this.state.height,
       height: this.state.width,
     } : {};
+
     return (
       <ViewPagerAndroid ref='scrollView'
-        {...this.props}
-        initialPage={this.props.loop ? this.state.index + 1 : this.state.index}
-        onPageSelected={this.onScrollEnd}
-        style={[{flex:1},verticalStyle]}>
+                        {...this.props}
+                        initialPage={this.props.loop ? this.state.index + 1 : this.state.index}
+                        onPageSelected={this.onScrollEnd}
+                        style={[{flex:1},verticalStyle]}
+                        scrollEnabled = {this.props.scrollEnabled || true}
+      >
         {pages}
       </ViewPagerAndroid>
     )
@@ -583,18 +592,27 @@ export default class extends Component {
    * Default render
    * @return {object} react-dom
    */
+
+
+
   render () {
     const state = this.state
     const props = this.props
-    const children = props.children
     const index = state.index
+    const children = React.Children.map(props.children,
+      (child, i) => {
+        return React.cloneElement(child, {
+          isResetScale: i !== index,
+        })
+      }
+    );
     const total = state.total
     const loop = props.loop
     // let dir = state.dir
     // let key = 0
     const loopVal = loop ? 1 : 0
+    let pages = [];
 
-    let pages = []
     let verticalStyle = this.state.dir === 'y' && Platform.OS === 'android' ? {
       transform: [{rotate: '-90deg'}]
     } : {};
@@ -613,7 +631,6 @@ export default class extends Component {
         pages.unshift(total - 1 + '')
         pages.push('0')
       }
-
       pages = pages.map((page, i) => {
         if (props.loadMinimal) {
           if (i >= (index + loopVal - props.loadMinimalSize) &&
@@ -634,22 +651,22 @@ export default class extends Component {
       pages = <View style={pageStyle} key={0}>{children}</View>
     }
     let containerVerticalStyle = this.state.dir === 'y' && Platform.OS === 'android' ? {
-        width: state.height,
-        height: state.width,
-        transform:[{ rotate: '90deg'}],
+      width: state.height,
+      height: state.width,
+      transform:[{ rotate: '90deg'}],
     } : {};
     return (
-        <View style={[styles.container, {
-          width: state.width,
-          height: state.height,
-        }, containerVerticalStyle]}>
-            {this.renderScrollView(pages)}
-            {props.showsPagination && (props.renderPagination
-              ? this.props.renderPagination(state.index, state.total, this)
-              : this.renderPagination())}
-            {this.renderTitle()}
-            {this.props.showsButtons && this.renderButtons()}
-        </View>
+      <View style={[styles.container, {
+        width: state.width,
+        height: state.height,
+      }, containerVerticalStyle]}>
+        {this.renderScrollView(pages)}
+        {props.showsPagination && (props.renderPagination
+          ? this.props.renderPagination(state.index, state.total, this)
+          : this.renderPagination())}
+        {this.renderTitle()}
+        {this.props.showsButtons && this.renderButtons()}
+      </View>
     )
   }
 }
